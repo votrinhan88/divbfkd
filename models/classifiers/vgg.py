@@ -1,10 +1,3 @@
-# Change path
-import os, sys
-repo_path = os.path.abspath(os.path.join(__file__, '../../..'))
-assert os.path.basename(repo_path) == 'kd_torch', "Wrong parent folder. Please change to 'kd_torch'"
-if sys.path[0] != repo_path:
-    sys.path.insert(0, repo_path)
-
 from typing import Optional, Sequence
 
 from torch import nn, Tensor
@@ -31,10 +24,9 @@ class VGG(nn.Module):
         19 : [[64, 64, "M"], [128, 128, "M"], [256, 256, 256, 256, "M"], [512, 512, 512, 512, "M"], [512, 512, 512, 512, "M"]],
     }
 
-    def __init__(
-        self,
+    def __init__(self,
         ver:int|str=11,
-        input_dim:Sequence[int]=[3, 224, 224], #[1, 32, 32],
+        input_dim:Sequence[int]=[3, 224, 224],
         num_classes:int=1000,
         NormLayer:Optional[nn.Module]=None,
         dropout:float=0.5,
@@ -55,7 +47,6 @@ class VGG(nn.Module):
         elif self.half_size is True:
             divisor = 2
                     
-        # self.features = features # intermediate layers created by make_layer
         cur_channels = input_dim[0]
         blocks = []
         for block in self.config[self.ver]:
@@ -95,8 +86,8 @@ class VGG(nn.Module):
         if init_weights == True:
             self.init_weights()
             
-    def forward(self, x:Tensor) -> Tensor:
-        x = self.blocks(x)
+    def forward(self, input:Tensor) -> Tensor:
+        x = self.blocks(input)
         x = self.avgpool(x)
         x = self.flatten(x)
         x = self.fc_1(x)
