@@ -9,10 +9,10 @@ class AlexNet(nn.Module):
     Krizhevsky et al. (2012). DOI: 10.1145/3065386.
 
     Args:
-      `half_size`: Flag to choose between AlexNet or AlexNet-Half. Defaults to  \
-        `False`.
       `input_dim`: Dimension of input images. Defaults to `[3, 32, 32]`.
       `num_classes`: Number of output nodes. Defaults to `10`.
+      `half_size`: Flag to choose between AlexNet or AlexNet-Half. Defaults to  \
+        `False`.
       `return_logits`: Flag to choose between return logits or probability.     \
         Defaults to `True`.
     """    
