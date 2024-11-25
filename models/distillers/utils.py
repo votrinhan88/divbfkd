@@ -9,14 +9,14 @@ class IntermediateFeatureExtractor(nn.Module):
     """Wrapper to extract a model's intermediate features via PyTorch hooks.
         
     Args:
-    + `model`: Model to extract features from.
-    + `in_layers`: Dict of `(name:layer)` to extract incoming features with     \
+      `model`: Model to extract features from.
+      `in_layers`: Dict of `(name:layer)` to extract incoming features with     \
         forward pre-hooks. Defaults to `None`.
-    + `out_layers`: Dict of `(name:layer)` to extract exiting features with     \
+      `out_layers`: Dict of `(name:layer)` to extract exiting features with     \
         forward hooks. Defaults to `None`.
-    + `with_output`: Flag to return the model's original output. Defaults to    \
+      `with_output`: Flag to return the model's original output. Defaults to    \
         `True`.
-    + `device`: The desired device of trainer, needs to be declared explicitly  \
+      `device`: The desired device of trainer, needs to be declared explicitly  \
         in case of Distributed Data Parallel training. Defaults to `None`, skip \
         to automatically choose single-process `'cuda'` if available or else    \
         `'cpu'`.
