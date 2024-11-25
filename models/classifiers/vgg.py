@@ -5,15 +5,22 @@ from numpy import prod
 
 
 class VGG(nn.Module):
-    """Args:
-    + `ver`: Defaults to `11`.
-    + `input_dim`: Defaults to `[3, 224, 224]`.
-    + `num_classes`: Defaults to `1000`.
-    + `NormLayer`: Defaults to `None`.
-    + `dropout`: Defaults to `0.5`.
-    + `half_size`: Defaults to `False`.
-    + `init_weights`: Defaults to `True`.
-    + `return_logits`: Defaults to `True`.
+    """VGG model. Very Deep Convolutional Networks for Large-scale Image
+    Recognition - Simonyan and Zisserman, 2014.
+    
+    Args:
+      `ver`: Model version. Could be 11 | 13 | 16 | 19 or A | B | D | E.        \
+        Defaults to `11`.
+      `input_dim`: Dimension of input images. Defaults to `[3, 224, 224]`.
+      `num_classes`: Number of output nodes. Defaults to `1000`.
+      `NormLayer`: Normalization layer. Defaults to `None`.
+      `dropout`: Dropout probability. Defaults to `0.5`.
+      `half_size`: Flag to choose between AlexNet or AlexNet-Half. Defaults to  \
+        `False`.
+      `init_weights`: Flag to follow VGG's weight initlization. Defaults to     \
+        `True`.
+      `return_logits`: Flag to choose between return logits or probability.     \
+        Defaults to `True`.
     https://pytorch.org/vision/main/_modules/torchvision/models/vgg.html
     """
     ver_depth:dict[str|int] = {"A":11, "B":13, "D":16, "E":19}
@@ -31,7 +38,7 @@ class VGG(nn.Module):
         NormLayer:Optional[nn.Module]=None,
         dropout:float=0.5,
         half_size:bool=False,
-        init_weights:bool = True,
+        init_weights:bool=True,
         return_logits:bool=True,
     ):
         super().__init__()
