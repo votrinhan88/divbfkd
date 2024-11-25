@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from torch import nn
+from torch import nn, Tensor
 import numpy as np
 
 
@@ -92,8 +92,8 @@ class AlexNet(nn.Module):
             elif self.num_classes > 1:
                 self.pred = nn.Softmax(dim=1)
 
-    def forward(self, x):
-        x = self.conv_1(x)
+    def forward(self, input:Tensor) -> Tensor:
+        x = self.conv_1(input)
         x = self.conv_2(x)
         x = self.conv_3(x)
         x = self.conv_4(x)
