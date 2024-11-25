@@ -1,0 +1,17 @@
+name: kd_torch
+channels:
+  - defaults
+dependencies:
+  - pip
+  - python=3.10
+  - pip:
+      - ipykernel
+      - matplotlib
+      - MulticoreTSNE
+      - numpy
+      - pandas
+      - torch
+      - torchvision
+      - torchinfo
+      - tqdm
+      - umap-learn
