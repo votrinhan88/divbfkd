@@ -15,7 +15,7 @@ from utils.metrics import DDPMetric, Mean, CategoricalAccuracy
 from utils.trainers import parse_loss
 
 
-class HintonDistiller(Distiller):
+class StandardKD(Distiller):
     """Standard knowledge distillation scheme, training the student on both
     actual data and the soft targets produced by a pre-trained teacher.
 
