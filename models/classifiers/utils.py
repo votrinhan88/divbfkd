@@ -23,7 +23,7 @@ class ClassifierTrainer(Trainer):
       `model`: Classifier model to train. Must return logits.
 
     Kwargs: Additional arguments to `Trainer`: `device`, `world_size`,
-    `master_rank`
+    `master_rank`.
     """
     def __init__(self, model:nn.Module, **kwargs):
         super().__init__(**kwargs)
