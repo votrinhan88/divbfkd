@@ -5,8 +5,7 @@ from numpy import prod
 
 
 class VGG(nn.Module):
-    """VGG model. Very Deep Convolutional Networks for Large-scale Image
-    Recognition - Simonyan and Zisserman, 2014.
+    """VGG model.
     
     Args:
       `ver`: Model version. Could be 11 | 13 | 16 | 19 or A | B | D | E.        \
@@ -21,6 +20,9 @@ class VGG(nn.Module):
         `True`.
       `return_logits`: Flag to choose between return logits or probability.     \
         Defaults to `True`.
+    
+    Very Deep Convolutional Networks for Large-scale Image Recognition -
+    Simonyan and Zisserman (2014)
     https://pytorch.org/vision/main/_modules/torchvision/models/vgg.html
     """
     ver_depth:dict[str|int] = {"A":11, "B":13, "D":16, "E":19}
