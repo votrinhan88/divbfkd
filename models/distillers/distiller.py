@@ -13,6 +13,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 
 from utils.metrics import DDPMetric, Mean, CategoricalAccuracy
 from utils.trainers import Trainer
+from utils.trainers import parse_loss
 
 
 class Distiller(Trainer):
@@ -24,14 +25,8 @@ class Distiller(Trainer):
     + `image_dim`: Dimension of input images. Defaults to `None`, skip to parse \
         from student.
 
-    Kwargs:
-    + `device`: The desired device of trainer, needs to be declared explicitly  \
-        in case of Distributed Data Parallel training. Defaults to `None`, skip \
-        to automatically choose single-process `'cuda'` if available or else    \
-        `'cpu'`.
-    + `world_size`: The number of processes in case of Distributed Data Parallel\
-        training. Defaults to `None`, skips to query automatically with `torch`.
-    + `master_rank`: Rank of the master process. Defaults to `0`.
+    Kwargs: Additional arguments to `Trainer`: `device`, `world_size`,
+    `master_rank`.
     """
     def __init__(self,
         teacher:nn.Module,
@@ -65,23 +60,13 @@ class Distiller(Trainer):
             entropy loss, `False`: skip measuring test loss, or pass in a custom\
             loss function. Defaults to `True`.
         
-        Kwargs:
-        + `sync_ddp_metrics`: Flag to synchronize metrics during Distributed    \
-            Data Parallel training. Can be of type `bool` or dict of `bool`,    \
-            accessible with the keys `'train'`|`'val'`. Defaults to `None` for  \
-            off for training and on for validation. Warning: Turning this on    \
-            will incur extra communication overhead.
+        Kwargs: Additional arguments to `Trainer().compile`: `sync_ddp_metrics`.
         """
         super().compile(**kwargs)
         self.loss_fn_test = loss_fn_test
 
         # Config test loss
-        if self.loss_fn_test is True:
-            self._loss_fn_test = nn.CrossEntropyLoss()
-        elif self.loss_fn_test is False:
-            self._loss_fn_test = lambda *args, **kwargs:torch.tensor(0)
-        else:
-            self._loss_fn_test = self.loss_fn_test
+        self._loss_fn_test = parse_loss(loss_arg=loss_fn_test, default=nn.CrossEntropyLoss())
 
         # Metrics
         self.val_metrics = {
