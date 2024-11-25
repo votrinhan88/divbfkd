@@ -1,7 +1,7 @@
 # Change path
 import os, sys
 repo_path = os.path.abspath(os.path.join(__file__, '../../..'))
-assert os.path.basename(repo_path) == 'kd_torch', "Wrong parent folder. Please change to 'kd_torch'"
+assert os.path.basename(repo_path) == 'divbfkd', "Wrong parent folder. Please change to 'divbfkd'"
 if sys.path[0] != repo_path:
     sys.path.insert(0, repo_path)
 
@@ -13,21 +13,17 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 
 from utils.trainers import Trainer
 from utils.metrics import CategoricalAccuracy, DDPMetric, Mean
+from utils.trainers import parse_loss
+
 
 class ClassifierTrainer(Trainer):    
     """Trainer framework to train classifiers.
         
     Args:
-    + `model`: Classifier model to train. Must return logits.
+      `model`: Classifier model to train. Must return logits.
 
-    Kwargs:
-    + `device`: The desired device of trainer, needs to be declared explicitly  \
-    in case of Distributed Data Parallel training. Defaults to `None`, skip \
-    to automatically choose single-process `'cuda'` if available or else    \
-    `'cpu'`.
-    + `world_size`: The number of processes in case of Distributed Data Parallel\
-        training. Defaults to `None`, skips to query automatically with `torch`.
-    + `master_rank`: Rank of the master process. Defaults to `0`.
+    Kwargs: Additional arguments to `Trainer`: `device`, `world_size`,
+    `master_rank`
     """
     def __init__(self, model:nn.Module, **kwargs):
         super().__init__(**kwargs)
@@ -43,31 +39,21 @@ class ClassifierTrainer(Trainer):
         """Compile trainer.
 
         Args:
-        + `opt`: Optimizer. Defaults to `None`, skip to not use an optimizer    \
+          `opt`: Optimizer. Defaults to `None`, skip to not use an optimizer    \
             (model is not updated).
-        + `loss_fn`: Loss function of type `bool` or custom. `True`: use the    \
+          `loss_fn`: Loss function of type `bool` or custom. `True`: use the    \
             cross-entropy loss, `False`: do not use any losses (model is not    \
             updated), or pass in a custom loss function. Defaults to `True`.
-
-        Kwargs:
-        + `sync_ddp_metrics`: Flag to synchronize metrics during Distributed    \
-            Data Parallel training. Can be of type `bool` or dict of `bool`,    \
-            accessible with the keys `'train'`|`'val'`. Defaults to `None` for  \
-            off for training and on for validation. Warning: Turning this on    \
-            will incur extra communication overhead.
+        
+        Kwargs: Additional arguments to `Trainer().compile`: `sync_ddp_metrics`.
         """
         super().compile(**kwargs)
         self.opt = opt
         self.loss_fn = loss_fn
         
         # Config loss function
-        if self.loss_fn is True:
-            self._loss_fn = nn.CrossEntropyLoss()
-        elif self.loss_fn is False:
-            self._loss_fn = lambda *args, **kwargs:torch.tensor(0)
-        else:
-            self._loss_fn = self.loss_fn
-
+        self._loss_fn = parse_loss(loss_arg=loss_fn, default=nn.CrossEntropyLoss())
+        
         # Metrics
         self.train_metrics.update({'acc': CategoricalAccuracy()})
         self.val_metrics.update({'acc': CategoricalAccuracy()})
@@ -99,7 +85,7 @@ class ClassifierTrainer(Trainer):
         self.opt.zero_grad()
         # Forward
         prediction = self.model(input)
-        loss = self._loss_fn(input=prediction, target=label)
+        loss:Tensor = self._loss_fn(input=prediction, target=label)
         # Backward
         if self.loss_fn is not False:
             loss.backward()
