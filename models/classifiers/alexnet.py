@@ -6,7 +6,7 @@ import numpy as np
 
 class AlexNet(nn.Module):
     """ImageNet classification with deep convolutional neural networks -
-    Krizhevsky et al. (2012). DOI: 10.1145/3065386
+    Krizhevsky et al. (2012). DOI: 10.1145/3065386.
 
     Args:
       `half_size`: Flag to choose between AlexNet or AlexNet-Half. Defaults to  \
@@ -112,9 +112,9 @@ class AlexNet(nn.Module):
     
     def extra_repr(self) -> str:
         params = {
-            'input_dim'     :self.input_dim,
-            'num_classes'   :self.num_classes,
-            'half_size'     :self.half_size,
-            'return_logits' :self.return_logits,
+            'input_dim'    : self.input_dim,
+            'num_classes'  : self.num_classes,
+            'half_size'    : self.half_size,
+            'return_logits': self.return_logits,
         }
         return ', '.join([f'{k}={v}' for k, v in params.items() if v is not None])
