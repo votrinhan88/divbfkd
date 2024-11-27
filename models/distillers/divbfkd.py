@@ -23,8 +23,8 @@ import tqdm.auto as tqdm
 from umap import UMAP
 
 from models.classifiers import ClassifierTrainer, AlexNet, LeNet5, VGG
-from models.classifiers.resnet import ResNet_CIFAR
-from models.distillers import Distiller, HintonDistiller, IntermediateFeatureExtractor
+from models.classifiers.resnetcifar import ResNet_CIFAR
+from models.distillers import Distiller, StandardKD, IntermediateFeatureExtractor
 from models.GANs.dcgan import Discriminator
 from models.GANs.utils import GANGIFMaker
 from models.GANs.wgan import WassersteinLoss, WeightClamper
@@ -772,6 +772,7 @@ class DivBFKD(Distiller):
                         'count_T':cb.format_multicounter,
                         'count_S':cb.format_multicounter,
                     })
+
 
 
 def save_images(images:Tensor|np.ndarray, is_bhwc:bool=False, path='./logs/image.png', return_figax:bool=False, **kwargs):
