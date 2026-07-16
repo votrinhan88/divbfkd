@@ -1,0 +1,42 @@
+metaconfig:
+  name: teacher-svhn-alexnet
+  expt: teacher
+  path: ./logs/teacher/
+dataset:
+  name: SVHN
+  kwargs:
+    splits: [train, test]
+    init_augmentations:
+      train: eval:transforms.RandomCrop(32, padding=4)
+  image_dim: [3, 32, 32]
+  num_classes: 10
+  onehot_label: false
+dataloader:
+  ddp: true
+  ddp_kwargs:
+    shuffle:
+      train: true
+      test: false
+  batch_size:
+    train: 128
+    test: 1024
+  num_workers: 4
+models:
+  teacher:
+    Class: eval:AlexNet
+    kwargs:
+      input_dim: [3, 32, 32]
+      num_classes: 10
+optim:
+  num_epochs: 200
+  opt_T:
+    Class: eval:torch.optim.SGD
+    kwargs:
+      lr: 0.1
+      momentum: 0.9
+      weight_decay: 0.0005
+  sch_T:
+    Class: eval:torch.optim.lr_scheduler.MultiStepLR
+    kwargs:
+      milestones: [100, 150]
+      gamma: 0.1

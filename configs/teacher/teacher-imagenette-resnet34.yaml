@@ -1,0 +1,56 @@
+metaconfig:
+  name: teacher-imagenette-resnet34
+  expt: teacher
+  path: ./logs/teacher/
+dataset:
+  name: Imagenette
+  kwargs:
+    init_augmentations:
+      train: >-
+        eval:transforms.Compose([
+          transforms.Resize(256),
+          transforms.RandomCrop(224),
+          transforms.RandomHorizontalFlip(),
+        ])
+      val: >-
+        eval:transforms.Compose([
+          transforms.Resize(256),
+          transforms.CenterCrop(224),
+        ])
+  image_dim: [3, 224, 224]
+  num_classes: 10
+  onehot_label: false
+  split_remap:
+    val: test
+dataloader:
+  ddp: true
+  ddp_kwargs:
+    shuffle:
+      train: true
+      test: false
+  batch_size:
+    train: 128
+    test: 128
+  kwargs:
+    num_workers: 4
+    prefetch_factor: 2
+    pin_memory: true
+models:
+  teacher:
+    Class: eval:torchvision.models.resnet34
+    kwargs:
+      num_classes: 10
+    name: ResNet34
+optim:
+  num_epochs: 200
+  opt_T:
+    Class: eval:torch.optim.SGD
+    kwargs:
+      lr: 0.1
+      momentum: 0.9
+      weight_decay: 0.0005
+  sch_T:
+    Class: eval:torch.optim.lr_scheduler.MultiStepLR
+    kwargs:
+      milestones: [100, 150]
+      gamma: 0.1

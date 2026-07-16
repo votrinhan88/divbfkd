@@ -1,0 +1,35 @@
+metaconfig:
+  name: teacher-mnist-lenet5
+  expt: teacher
+  path: ./logs/teacher/
+dataset:
+  name: MNIST
+  kwargs:
+    resize: [32, 32]
+  image_dim: [1, 32, 32]
+  num_classes: 10
+  onehot_label: false
+dataloader:
+  ddp: true
+  ddp_kwargs:
+    shuffle:
+      train: true
+      test: false
+  batch_size:
+    train: 128
+    test: 1024
+  num_workers: 4
+models:
+  teacher:
+    Class: eval:LeNet5
+    kwargs:
+      input_dim: [1, 32, 32]
+      num_classes: 10
+optim:
+  num_epochs: 100
+  opt_T:
+    Class: eval:torch.optim.SGD
+    kwargs:
+      lr: 0.01
+      momentum: 0.9
+      weight_decay: 0.0005

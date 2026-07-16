@@ -1,0 +1,64 @@
+
+'standardkd-imagenette': {
+    'dataset': {
+        'name': 'Imagenette',
+        'kwargs': {
+            'init_augmentations': {
+                'train': transforms.Compose([
+                    transforms.Resize(256),
+                    transforms.RandomCrop(224),
+                    transforms.RandomHorizontalFlip(),
+                ]),
+                'val': transforms.Compose([
+                    transforms.Resize(256),
+                    transforms.CenterCrop(224),
+                ]),
+            },
+        },
+        'image_dim': [3, 224, 224],
+        'num_classes': 10,
+        'onehot_label': False,
+        'fewshot_kwargs': {'num_samples': 2000, 'balanced': True, 'shuffle':True},
+        'split_remap': {'val': 'test'},
+    },
+    'dataloader': {
+        'ddp': True,
+        'ddp_kwargs': {'shuffle': {'train':True, 'val':False}},
+        'batch_size': {'train': 128, 'val': 128},
+        'kwargs': {'num_workers': 2, 'prefetch_factor': 2, 'pin_memory': True},
+    },
+    'models': {
+        'teacher': {
+            'Class': torchvision.models.resnet34,
+            'kwargs': {'num_classes': 10},
+            'name': 'ResNet34',
+            'pretrained_path': './pretrained/Imagenette/raw/ResNet34 - 9047.pt',
+            'pin_memory': True,
+        },
+        'student': {
+            'Class': torchvision.models.resnet18,
+            'kwargs': {'num_classes': 10},
+            'name': 'ResNet18',
+        },
+        'distiller': {
+            'Class': HintonDistiller,
+            'compile_kwargs': {
+                'loss_fn_distill': nn.KLDivLoss(reduction='batchmean'),
+                'coeff_dt': 0.9,
+                'coeff_lb': 0.1,
+                'temperature':1,
+            },
+        }
+    },
+    'optim': {
+        'num_epochs': 200,
+        'opt_S': {
+            'Class': torch.optim.SGD,
+            'kwargs': {'lr':1e-1, 'momentum':0.9, 'weight_decay':5e-4},
+        },
+        'sch_S': {
+            'Class': torch.optim.lr_scheduler.MultiStepLR,
+            'kwargs': {'milestones':[100, 150], 'gamma':0.1},
+        },
+    },
+},

@@ -1,0 +1,52 @@
+
+'standardkd-svhn':{
+    'dataset': {
+        'name': 'SVHN',
+        'kwargs': {
+            'splits': ['train', 'test'],
+            'resize':[32, 32],
+            'init_augmentations': {'train': transforms.RandomCrop(32, padding=4)},
+        },
+        'image_dim': [3, 32, 32],
+        'num_classes': 10,
+        'onehot_label': False,
+        'fewshot_kwargs': {'num_samples': 2000, 'balanced': True, 'shuffle':True},
+    },
+    'dataloader': {
+        'ddp': True,
+        'ddp_kwargs': {'shuffle': {'train':True, 'test':False}},
+        'batch_size': {'train': 128, 'test': 1024},
+        'kwargs': {},
+    },
+    'models': {
+        'teacher': {
+            'Class': AlexNet,
+            'kwargs': {'input_dim': [3, 32, 32], 'num_classes': 10},
+            'pretrained_path': './pretrained/SVHN/raw/AlexNet - 9616.pt',
+        },
+        'student': {
+            'Class': AlexNet,
+            'kwargs': {'half_size': True, 'input_dim': [3, 32, 32], 'num_classes': 10},
+        },
+        'distiller': {
+            'Class': HintonDistiller,
+            'compile_kwargs': {
+                'loss_fn_distill': nn.KLDivLoss(reduction='batchmean'),
+                'coeff_dt': 0.9,
+                'coeff_lb': 0.1,
+                'temperature':1,
+            },
+        }
+    },
+    'optim': {
+        'num_epochs': 200,
+        'opt_S': {
+            'Class': torch.optim.SGD,
+            'kwargs': {'lr':1e-1, 'momentum':0.9, 'weight_decay':5e-4},
+        },
+        'sch_S': {
+            'Class': torch.optim.lr_scheduler.MultiStepLR,
+            'kwargs': {'milestones':[100, 150], 'gamma':0.1},
+        },
+    }
+},

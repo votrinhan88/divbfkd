@@ -1,0 +1,45 @@
+
+'standardkd-mnist':{
+    'dataset': {
+        'name': 'MNIST',
+        'kwargs': {'resize':[32, 32]},
+        'image_dim': [1, 32, 32],
+        'num_classes': 10,
+        'onehot_label': False,
+        'fewshot_kwargs': {'num_samples': 2000, 'balanced': True, 'shuffle':True},
+    },
+    'dataloader': {
+        'ddp': True,
+        'ddp_kwargs': {'shuffle': {'train':True, 'test':False}},
+        'batch_size': {'train': 128, 'test': 1024},
+        'kwargs': {},
+    },
+    'models': {
+        'teacher': {
+            'Class': LeNet5,
+            'kwargs': {'input_dim': [1, 32, 32], 'num_classes': 10},
+            'pretrained_path': './pretrained/MNIST/raw/LeNet5 - 9928.pt',
+        },
+        'student': {
+            'Class': LeNet5,
+            'kwargs': {'half_size':True, 'input_dim': [1, 32, 32], 'num_classes': 10},
+        },
+        'distiller': {
+            'Class': HintonDistiller,
+            'compile_kwargs': {
+                'loss_fn_distill': nn.KLDivLoss(reduction='batchmean'),
+                'coeff_dt': 0.9,
+                'coeff_lb': 0.1,
+                'temperature':1,
+            },
+        }
+    },
+    'optim': {
+        'num_epochs': 100,
+        'opt_S': {
+            'Class': torch.optim.SGD,
+            'kwargs': {'lr':1e-2, 'momentum':0.9, 'weight_decay':5e-4},
+        },
+        'sch_S': None,
+    },
+},

@@ -1,0 +1,47 @@
+metaconfig:
+  name: teacher-cifar100-resnet32
+  expt: teacher
+  path: ./logs/teacher/
+dataset:
+  name: CIFAR100
+  kwargs:
+    init_augmentations:
+      train: >-
+        eval:transforms.Compose([
+          transforms.RandomCrop(32, padding=4),
+          transforms.RandomHorizontalFlip(),
+        ])
+  image_dim: [3, 32, 32]
+  num_classes: 100
+  onehot_label: false
+dataloader:
+  ddp: true
+  ddp_kwargs:
+    shuffle:
+      train: true
+      test: false
+  batch_size:
+    train: 128
+    test: 1024
+  num_workers: 4
+models:
+  teacher:
+    Class: eval:ResNet_CIFAR
+    kwargs:
+      input_dim: [3, 32, 32]
+      num_classes: 100
+      depth: 32
+      skip_option: A
+optim:
+  num_epochs: 200
+  opt_T:
+    Class: eval:torch.optim.SGD
+    kwargs:
+      lr: 0.1
+      momentum: 0.9
+      weight_decay: 0.0005
+  sch_T:
+    Class: eval:torch.optim.lr_scheduler.MultiStepLR
+    kwargs:
+      milestones: [100, 150]
+      gamma: 0.1

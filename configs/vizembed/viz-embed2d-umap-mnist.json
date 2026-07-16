@@ -1,0 +1,58 @@
+'viz-embed2d-umap-mnist': {
+    'dataset': {
+        'name': 'MNIST',
+        'kwargs': {'resize': [32, 32]},
+        'image_dim': [1, 32, 32],
+        'num_classes': 10,
+        'onehot_label': False,
+        'fewshot_kwargs': {'num_samples': 2000, 'balanced': True, 'shuffle':True},
+        'mixup_kwargs': {'num_samples': 24000, 'batch_size': 1000},
+        'cvae_kwargs': {'num_samples': 24000, 'batch_size': 1000},
+        'wgan_kwargs': {'num_samples': 24000, 'batch_size': 1000},
+        'divbfkd_kwargs': {'num_samples': 24000, 'batch_size': 1000},
+    },
+    'dataloader': {
+        'ddp': True,
+        'ddp_kwargs': {'shuffle': {'train':True, 'test':False}},
+        'batch_size': {'fewshot':128, 'train': 128, 'test': 1024},
+        'kwargs': {},
+    },
+    'models': {
+        'teacher': {
+            'Class': LeNet5,
+            'kwargs': {'input_dim': [1, 32, 32], 'num_classes': 10},
+            'pretrained_path': './pretrained/MNIST/raw/LeNet5 - 9928.pt',
+            'feature_layer': 'flatten',
+            'feature_dim': [120],
+        },
+        'generator': {
+            'Class': Generator,
+            'kwargs': {'latent_dim': 100, 'image_dim': [1, 32, 32], 'base_dim': [256, 8, 8], 'NormLayer': nn.BatchNorm2d},
+            'pretrained_path_wgan': './logs/MNIST/WGAN.pt',
+            'pretrained_path_divbfkd': './logs/MNIST/WGAN-DivBFKD.pt',
+        },
+    },
+    'embed': {
+        'Class': UMAP,
+        'kwargs': {'n_components': 2},
+        'toggle_pool': {
+            'trainfull': True,
+            'trainfew': True,
+            'mixupfew': False,
+            'cvae': False,
+            'wgan': True,
+            'divbfkd-unfiltered': True,
+            'divbfkd': True,
+            'fullkd': True,
+        },
+    },
+    'viz': {
+        'save_path': './logs/MNIST/viz-embed2d-umap-mnist.png',
+        'colors': ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan'],
+        'kwargs': {'s': 3},
+    },
+    'metrics': {
+        'inception_score': False,
+        'alpha_precision': True,
+    },
+},

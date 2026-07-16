@@ -1,4 +1,4 @@
-name: kd_torch
+name: divbfkd
 channels:
   - defaults
 dependencies:
@@ -7,9 +7,9 @@ dependencies:
   - pip:
       - ipykernel
       - matplotlib
-      - MulticoreTSNE
       - numpy
       - pandas
+      - pyyaml
       - torch
       - torchvision
       - torchinfo

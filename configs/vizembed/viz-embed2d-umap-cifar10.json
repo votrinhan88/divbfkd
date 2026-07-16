@@ -1,0 +1,68 @@
+'viz-embed2d-umap-cifar10': {
+    'dataset': {
+        'name': 'CIFAR10',
+        'kwargs': {
+            'init_augmentations': {'train': transforms.Compose([
+                transforms.RandomCrop(32, padding=4),
+                transforms.RandomHorizontalFlip(),
+            ])},
+        },
+        'image_dim': [3, 32, 32],
+        'num_classes': 10,
+        'onehot_label': False,
+        'fewshot_kwargs': {'num_samples': 2000, 'balanced': True, 'shuffle':True},
+        'mixup_kwargs': {'num_samples': 2000, 'batch_size': 1000},
+        'cvae_kwargs': {'num_samples': 40000, 'batch_size': 1000},
+        'wgan_kwargs': {'num_samples': 40000, 'batch_size': 1000},
+        'divbfkd_kwargs': {'num_samples': 40000, 'batch_size': 1000},
+    },
+    'dataloader': {
+        'ddp': True,
+        'ddp_kwargs': {'shuffle': {'train':True, 'test':False}},
+        'batch_size': {'fewshot':128, 'train': 128, 'test': 1024},
+        'kwargs': {},
+    },
+    'models': {
+        'teacher': {
+            'Class': AlexNet,
+            'kwargs': {'input_dim': [3, 32, 32], 'num_classes': 10},
+            'pretrained_path': './pretrained/CIFAR10/raw/AlexNet - 9005.pt',
+            'feature_layer': 'flatten',
+            'feature_dim': [1152],
+        },
+        'generator': {
+            'Class': Generator,
+            'kwargs': {'latent_dim': 256, 'image_dim': [3, 32, 32], 'base_dim': [256, 8, 8], 'NormLayer': nn.BatchNorm2d},
+            'pretrained_path_wgan': './logs/CIFAR10/WGAN.pt',
+            'pretrained_path_divbfkd': './logs/CIFAR10/WGAN-DivBFKD.pt',
+        },
+        'cvae': {
+            'Class': load_model,
+            'kwargs': {'filepath': './tests/fsbbt2_synthetic/cvae_decoder_cifar10_subset_method_input_cond_la2_bs64_ep601_teacher_original.h5'},
+            'latent_dim': 2,
+        },
+    },
+    'embed': {
+        'Class': UMAP,
+        'kwargs': {'n_components': 2},
+        'toggle_pool': {
+            'trainfull': True,
+            'trainfew': True,
+            'mixupfew': False,
+            'cvae': False,
+            'wgan': True,
+            'divbfkd-unfiltered': True,
+            'divbfkd': True,
+            'fullkd': True,
+        },
+    },
+    'viz': {
+        'save_path': './logs/CIFAR10/viz-embed2d-umap-cifar10.png',
+        'colors': ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan'],
+        'kwargs': {'s': 3},
+    },
+    'metrics': {
+        'inception_score': False,
+        'alpha_precision': True,
+    },
+},

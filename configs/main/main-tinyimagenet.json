@@ -1,0 +1,85 @@
+'main-tinyimagenet': {
+    'dataset': {
+        'name': 'TinyImageNet',
+        'kwargs': {
+            'init_augmentations': {'train': transforms.Compose([
+                transforms.RandomCrop(size=[64, 64], padding=8),
+                transforms.RandomHorizontalFlip(),
+            ])},
+        },
+        'image_dim': [3, 64, 64],
+        'num_classes': 200,
+        'onehot_label': False,
+        'fewshot_kwargs': {'num_samples': 10000, 'balanced': True, 'shuffle':True},
+        'split_remap': {'val': 'test'},
+    },
+    'dataloader': {
+        'ddp': True,
+        'ddp_kwargs': {'shuffle': {'train':True, 'test':False}},
+        'batch_size': {'train': 128, 'test': 1024},
+        'kwargs': {},
+    },
+    'models': {
+        'teacher': {
+            'Class': ResNet_CIFAR,
+            'kwargs': {'depth':32, 'skip_option':'A', 'input_dim': [3, 64, 64], 'num_classes': 200},
+            'pretrained_path': './pretrained/TinyImageNet/raw/ResNet32_CIFAR - 5627.pt',
+        },
+        'student': {'Class': ResNet_CIFAR, 'kwargs': {'depth':20, 'skip_option':'A', 'input_dim': [3, 64, 64], 'num_classes': 200}},
+        'generator': {'Class': Generator, 'kwargs': {'latent_dim': 256, 'image_dim': [3, 64, 64], 'base_dim': [256, 8, 8], 'NormLayer': nn.BatchNorm2d}},
+        'discriminator': {'Class': Discriminator,'kwargs': {'image_dim': [3, 64, 64], 'base_dim': [256, 8, 8], 'return_logits': True}},
+        'distiller': {
+            'Class': DivBFKD,
+            'kwargs': {},
+            'compile_kwargs': {
+                'filter': {
+                    'mode': 'quantile',     # Filtering method: 'quantile' | 'mean' | 'constant' | None. Defaults to 'quantile' for Adaptive Filtering
+                    'per_class': True,      # Flag to set different confidence thresholds for each class. Defaults to True  for Adaptive Filtering
+                    'q': 0.1,               # Value of proportion q for mode `quantile`. Defaults to 0.1. (Note: When q=0, random samples can still be introduced into the GAN-training pool)
+                    'max_confidence': 0.99, # Upper bound for confidence threshold selection. Defaults to 0.99.
+                    'min_confidence': 0.7,  # Lower bound for confidence threshold selection. Defaults to 0.7.
+                },
+                'gan_pool_config': {
+                    'budget':0,               # Additional size for combined real + synthetic samples. Defaults to 0 (cut-off to size of few-shot data)
+                    'reset':True,             # Introducing synthetic samples to GAN's training set during Adaptive Filtering. Defaults to True.
+                    'filter':True,            # Flag to filter the synthetic samples based on confidence thresholds during Adaptive Filtering. Defaults to True.
+                    'balanced_classes':False, # Ensure high-confidence images to have balanced classes, unstable with high num_classes. Default: False
+                    'aug_gan': transforms.ToTensor(), # Augmentation function few-shot samples for training GAN. Synthetic samples (via Adaptive Filtering) are not affected. 
+                },
+                'loss_fn_adversarial': True,  # Adversarial loss function for Discriminator and Generator. Defaults to True for WassersteinLoss.
+                'loss_fn_regularize': False,  # Regularization loss function for Discriminator. Defaults to False, (True is CrossEntropyLoss).
+                'loss_fn_distill': True,      # Distillation loss function for training the student in stage 2. Defaults to True for CrossEntropyLoss.
+                'temperature': 1,             # Temperature for softened logits in KD. Defaults to 1 (no softening).
+                'coeff_D_ad': 1,              # Coefficient for adversarial loss. Defaults to 1.
+                'coeff_D_rg': 0,              # Coefficient for regularization loss. Defaults to 0.
+                'coeff_D_gp': 10,             # Coefficient for Gradient Penalty loss following WGAN-GP. Defaults to 10.
+                'repeat_D': 5,                # Ratio of Discriminator:Generator steps. Defaults to 5.
+                'clamp_weights': False,       # Flag to enable weight-clamping to [-0.01, 0.01] (original WGAN).
+                'distill_pool_config': {
+                    'budget': 50000,          # Number of additionally generated samples for Distillation set (in stage 2). Defaults to 24000.
+                    'filter': False,          # Filter high-confidence samples to Distillation set. Default to False.
+                    'balanced_classes':True,  # Flag to enable rejection sampling for balanced classes in Distillation set. Defaults to True.
+                    'aug_pseudolabel': transforms.ToTensor(),               # Augmentation function for collecting pseudolabels from the teacher (stage 1). Should be same to test set's augmentation for stable and accurate pseudolabels.
+                    'aug_kd_fewshot': transforms.Compose([                  # Augmentation function for fewshot samples during KD (stage 2). Should be same to train set's augmentation for diversity and consistent knowledge domain.
+                        transforms.RandomCrop(64, padding=8),
+                        transforms.RandomHorizontalFlip(),
+                        transforms.ToTensor(),
+                    ]),                                                     
+                    'aug_kd_synth': transforms.Compose([                    # Augmentation function for synthetic samples during KD (stage 2). These images are already Tensors and have the same dimensions to the student's input so no need for ToTensor() at the end.
+                        transforms.RandomCrop(64, padding=8),
+                        transforms.RandomHorizontalFlip(),
+                    ]),                                                     
+                },
+                'batch_size': 250,            # Batch size for the datapools
+            },
+        }
+    },
+    'optim': {
+        'num_epochs': [5000, 1000],
+        'opt_G': {'Class': torch.optim.RMSprop, 'kwargs': {'lr': 5e-5}},
+        'opt_D': {'Class': torch.optim.RMSprop, 'kwargs': {'lr': 5e-5}},
+        'opt_S': {'Class': torch.optim.SGD, 'kwargs': {'lr':1e-1, 'momentum':0.9, 'weight_decay':5e-4}},
+        'sch_S': {'Class': torch.optim.lr_scheduler.MultiStepLR, 'kwargs': {'milestones': [5500, 5750], 'gamma':0.1}},
+        'save_G': True,
+    },
+},
